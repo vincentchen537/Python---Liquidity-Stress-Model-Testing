@@ -111,6 +111,8 @@ results = liquidation_cost(liquidation_days, volume_scales, spread_scales)
 
 print(results.to_string(index=False))
 
+results.to_excel('liquidation costs.xlsx', sheet_name='Liquidation Costs', index=False)
+
 random_day = int(input("Enter days to liquidate assets over (1, 2, 5, 10, or 20 day period): "))
 
 while random_day not in liquidation_days:
