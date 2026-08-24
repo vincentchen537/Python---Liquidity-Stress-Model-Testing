@@ -111,8 +111,6 @@ results = liquidation_cost(liquidation_days, volume_scales, spread_scales)
 
 print(results.to_string(index=False))
 
-results.to_excel('liquidation costs.xlsx', sheet_name='Liquidation Costs', index=False)
-
 random_day = int(input("Enter days to liquidate assets over (1, 2, 5, 10, or 20 day period): "))
 
 while random_day not in liquidation_days:
@@ -139,53 +137,65 @@ daily_assets = total_position / random_day
 
 daily_liquidation = chosen_liquidation_cost / random_day
 
-collateral_rates = [0.05, 0.1, 0.15, 0.2]
-
 liquidity_results = []
 
 print(f"Daily asset value: ${daily_assets: ,.2f}")
 
 print(f"Daily liquidation cost: ${daily_liquidation: ,.2f}")
 
-for r in collateral_rates:
+r = float(input("Enter collateral rate (as decimal): "))
 
-    collateral = total_position * r
+collateral = total_position * r
 
-    liquidity = starting_cash
+liquidity = starting_cash
 
-    shortfall = False
+max_shortfall = 0
 
-    for day in range(1, random_day + 1):
+shortfall_day = None
 
-        beginning_cash = liquidity
+for day in range(1, random_day + 1):
 
-        assets = daily_assets
+    beginning_cash = liquidity
 
-        liquidation_cost = daily_liquidation
+    assets = daily_assets
 
-        other_outflow = misc_outflow
+    liquidation_cost = daily_liquidation
 
-        liquidity = beginning_cash + assets - liquidation_cost - collateral - other_outflow
+    other_outflow = misc_outflow
 
-        liquidity_results.append({"Collateral Rate": f"{100 * r}%",
+    collateral_outflow = collateral if day == 1 else 0
+
+    liquidity = beginning_cash + assets - liquidation_cost - collateral_outflow - other_outflow
+
+    liquidity_results.append({"Collateral Rate": f"{100 * r}%",
                                   
-                                  "Day": day,
+                                "Day": day,
                                   
-                                  "Beginning Cash": f"${beginning_cash: ,.2f}",
+                                "Beginning Cash": f"${beginning_cash: ,.2f}",
                                   
-                                  "Collateral": f"${collateral: ,.2f}",
+                                "Collateral": f"${collateral: ,.2f}",
                                   
-                                  "Ending Cash": f"${liquidity: ,.2f}"})
+                                "Ending Cash": f"${liquidity: ,.2f}"})
         
-        if liquidity < 0 and not shortfall:
+    if liquidity < 0:
 
-            print(f"Warning: liquidity shortfall starts on day {day} with collateral rate {100 * r}%")
+        if shortfall_day is None:
+            
+            shortfall_day = day
 
-            shortfall = True
+        max_shortfall = max(max_shortfall, abs(liquidity))
 
-    if not shortfall:
+if shortfall_day is None:
 
-        print(f"Having starting cash of ${starting_cash: ,.2f} a collateral of {100 * r}% is always safe")
+    print(f"Having starting cash of ${starting_cash: ,.2f} a collateral of {100 * r}% is always safe")
+
+ending_liquidity = liquidity
+
+print(f"First shortfall day: {shortfall_day}")
+
+print(f"Largest shortfall: ${max_shortfall:,.2f}")
+
+print(f"Ending liquidity: ${ending_liquidity:,.2f}")
 
 liquidity_results = pd.DataFrame(liquidity_results)
 
