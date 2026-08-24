@@ -147,6 +147,8 @@ r = float(input("Enter collateral rate (as decimal): "))
 
 collateral = total_position * r
 
+print(f"Set collateral = ${collateral: ,.2f}")
+
 liquidity = starting_cash
 
 max_shortfall = 0
@@ -167,15 +169,7 @@ for day in range(1, random_day + 1):
 
     liquidity = beginning_cash + assets - liquidation_cost - collateral_outflow - other_outflow
 
-    liquidity_results.append({"Collateral Rate": f"{100 * r}%",
-                                  
-                                "Day": day,
-                                  
-                                "Beginning Cash": f"${beginning_cash: ,.2f}",
-                                  
-                                "Collateral": f"${collateral: ,.2f}",
-                                  
-                                "Ending Cash": f"${liquidity: ,.2f}"})
+    liquidity_results.append({"Day": day, "Ending Cash": f"${liquidity: ,.2f}"})
         
     if liquidity < 0:
 
