@@ -41,6 +41,8 @@ portfolio = pd.DataFrame({
 
 #Capital: money a bank has available to absorb losses to stay financially stable
 
+#RWA: assets are assigned risk percentages to determine how risky they are and how much capital is needed to cover the risk
+
 def calculate_liquidation_cost(portfolio, liquidation_days, y = 0.001):
 
     x = portfolio.copy()
