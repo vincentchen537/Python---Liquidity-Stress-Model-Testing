@@ -43,7 +43,7 @@ portfolio = pd.DataFrame({
 
 #RWA: assets are assigned risk percentages to determine how risky they are and how much capital is needed to cover the risk
 
-def calculate_liquidation_cost(portfolio, liquidation_days, y = 0.001):
+def calculate_liquidation_cost(portfolio, liquidation_days, y = 0.001, exp = 0.5):
 
     x = portfolio.copy()
 
@@ -63,11 +63,13 @@ def calculate_liquidation_cost(portfolio, liquidation_days, y = 0.001):
 
     x["spread cost"] = x["position value"] * x["spread %"]
 
-    x["market impact %"] = y * np.sqrt(x["participation rate"])
+    x["market impact %"] = y * (x["participation rate"] ** exp)
 
     x["market impact cost"] = x["position value"] * x["market impact %"]
 
     x["total liquidation cost"] = x["spread cost"] + x["market impact cost"]
+
+    x["impact exponent"] = exp
 
     return x
 
@@ -87,7 +89,9 @@ volume_scales = [1.2, 1, 0.8, 0.6, 0.4]
 
 spread_scales = [0.75, 1, 1.25, 1.5, 2]
 
-def liquidation_cost(liquidation_days, volume_scales, spread_scales):
+impact_exponents = [0.5, 0.75, 1]
+
+def liquidation_cost(liquidation_days, volume_scales, spread_scales, impact_exponents):
 
     combined_results = []
 
@@ -97,19 +101,21 @@ def liquidation_cost(liquidation_days, volume_scales, spread_scales):
 
             for c in spread_scales:
 
-                total_stress = stress_scenarios(portfolio, volume_scale = b, spread_scale = c)
+                for d in impact_exponents:
 
-                result = calculate_liquidation_cost(total_stress, liquidation_days = a)
+                    total_stress = stress_scenarios(portfolio, volume_scale = b, spread_scale = c)
 
-                total_liquidation_cost = result["total liquidation cost"].sum()
+                    result = calculate_liquidation_cost(total_stress, liquidation_days = a, exp = d)
 
-                combined_results.append({"Liquidation Days": a, "Volume Scale": b, "Spread Scale": c, "Liquidation Cost": round(total_liquidation_cost, 2)})
+                    total_liquidation_cost = result["total liquidation cost"].sum()
+
+                    combined_results.append({"Liquidation Days": a, "Volume Scale": b, "Spread Scale": c, "Impact Exponent": d, "Liquidation Cost": round(total_liquidation_cost, 2)})
 
     combined_results = pd.DataFrame(combined_results)
 
     return combined_results
 
-results = liquidation_cost(liquidation_days, volume_scales, spread_scales)
+results = liquidation_cost(liquidation_days, volume_scales, spread_scales, impact_exponents)
 
 print(results.to_string(index=False))
 
